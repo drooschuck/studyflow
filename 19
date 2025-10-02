@@ -1,0 +1,93 @@
+import React from 'react';
+import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
+import { useApp } from '../context/AppContext';
+import { Greeting } from '../components/dashboard/Greeting';
+import { QuickStats } from '../components/dashboard/QuickStats';
+import { TodaySchedule } from '../components/dashboard/TodaySchedule';
+import { WeeklyGoal } from '../components/dashboard/WeeklyGoal';
+import { UpcomingTasks } from '../components/dashboard/UpcomingTasks';
+
+export default function Dashboard() {
+  const { state } = useApp();
+  const today = format(new Date(), 'yyyy-MM-dd');
+
+  // Today's data
+  const todayActivities = state.activities
+    .filter(activity => activity.date === today)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const completedTasks = todayActivities.filter(a => a.status === 'completed').length;
+  const totalTasks = todayActivities.length;
+
+  const todayStudyActivities = todayActivities.filter(activity => activity.type === 'study');
+  
+  const todayActualStudyTime = todayStudyActivities
+    .filter(activity => activity.status === 'completed')
+    .reduce((total, activity) => {
+      const start = parseISO(`${activity.date}T${activity.startTime}`);
+      const end = parseISO(`${activity.date}T${activity.endTime}`);
+      return total + (end.getTime() - start.getTime()) / (1000 * 60);
+    }, 0);
+
+  const todayStudyTimeTarget = state.dailyGoals.find(g => g.date === today)?.studyTimeTarget || 240;
+  const progressPercentage = Math.min((todayActualStudyTime / todayStudyTimeTarget) * 100, 100);
+
+  // Current and Next activity
+  const currentTime = format(new Date(), 'HH:mm');
+  const currentActivity = todayActivities.find(
+    activity => activity.startTime <= currentTime && activity.endTime > currentTime
+  );
+  const nextActivity = todayActivities.find(activity => activity.startTime > currentTime);
+
+  // Weekly data
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+
+  const weeklyStudyTime = state.activities
+    .filter(activity => {
+      const activityDate = parseISO(activity.date);
+      return (
+        activity.type === 'study' &&
+        activity.status === 'completed' &&
+        activityDate >= weekStart &&
+        activityDate <= weekEnd
+      );
+    })
+    .reduce((total, activity) => {
+      const start = parseISO(`${activity.date}T${activity.startTime}`);
+      const end = parseISO(`${activity.date}T${activity.endTime}`);
+      return total + (end.getTime() - start.getTime()) / (1000 * 60);
+    }, 0);
+  
+  const weeklyStudyTarget = 1200; // 20 hours default
+
+  return (
+    <div className="space-y-8">
+      <Greeting />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <TodaySchedule activities={todayActivities} />
+        </div>
+        
+        <div className="space-y-8">
+          <QuickStats 
+            progressPercentage={progressPercentage}
+            completedTasks={completedTasks}
+            totalTasks={totalTasks}
+            studyTime={todayActualStudyTime}
+            studySessions={todayStudyActivities.length}
+          />
+          <WeeklyGoal 
+            actualStudyTime={weeklyStudyTime}
+            studyTimeTarget={weeklyStudyTarget}
+          />
+          <UpcomingTasks 
+            currentActivity={currentActivity}
+            nextActivity={nextActivity}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

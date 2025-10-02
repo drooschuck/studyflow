@@ -1,0 +1,90 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Activity } from '../../types';
+import {
+  BookOpen,
+  Coffee,
+  School,
+  Utensils,
+  User,
+  Bed,
+  ChevronRight,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+interface UpcomingTasksProps {
+  currentActivity: Activity | undefined;
+  nextActivity: Activity | undefined;
+}
+
+const activityIcons = {
+  study: BookOpen,
+  break: Coffee,
+  school: School,
+  meal: Utensils,
+  personal: User,
+  sleep: Bed,
+};
+
+const activityColors = {
+  study: 'bg-red-100 text-red-600',
+  break: 'bg-purple-100 text-purple-600',
+  school: 'bg-blue-100 text-blue-600',
+  meal: 'bg-yellow-100 text-yellow-600',
+  personal: 'bg-green-100 text-green-600',
+  sleep: 'bg-gray-100 text-gray-600',
+};
+
+const ActivityCard = ({ activity, title }: { activity: Activity; title: string }) => {
+  const Icon = activityIcons[activity.type];
+  const colors = activityColors[activity.type];
+
+  return (
+    <div className="p-4 bg-white rounded-lg shadow">
+      <p className="text-sm font-medium text-gray-500 mb-2">{title}</p>
+      <div className="flex items-center">
+        <div className={`p-3 rounded-lg ${colors}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="ml-3 flex-1">
+          <h3 className="font-semibold text-gray-800 truncate">{activity.title}</h3>
+          <p className="text-sm text-gray-500">
+            {activity.startTime} - {activity.endTime}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export function UpcomingTasks({ currentActivity, nextActivity }: UpcomingTasksProps) {
+  return (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-lg shadow p-6"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Upcoming</h2>
+          <Link to="/schedule" className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center">
+            View All <ChevronRight className="h-4 w-4 ml-1" />
+          </Link>
+        </div>
+        <div className="space-y-4">
+          {currentActivity ? (
+            <ActivityCard activity={currentActivity} title="Now" />
+          ) : (
+            <div className="text-center py-4 text-gray-500">No current activity.</div>
+          )}
+          {nextActivity ? (
+            <ActivityCard activity={nextActivity} title="Next" />
+          ) : (
+            <div className="text-center py-4 text-gray-500">No more activities today.</div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}

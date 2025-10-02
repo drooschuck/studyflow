@@ -1,0 +1,57 @@
+export interface StudySession {
+  id: string;
+  subject: string;
+  duration: number; // in minutes
+  priority: 'low' | 'medium' | 'high';
+  objectives: string[];
+  startTime: string;
+  endTime: string;
+  date: string;
+  isRecurring: boolean;
+  recurringDays?: string[];
+  status: 'scheduled' | 'in-progress' | 'completed' | 'missed';
+}
+
+export interface Activity {
+  id: string;
+  title: string;
+  type: 'study' | 'break' | 'school' | 'meal' | 'personal' | 'sleep';
+  startTime: string;
+  endTime: string;
+  date: string;
+  color?: string;
+  status: 'scheduled' | 'completed' | 'missed';
+  studySession?: StudySession;
+}
+
+export interface RoutineTemplate {
+  id: string;
+  name: string;
+  description: string;
+  activities: Omit<Activity, 'id' | 'date'>[];
+  isDefault: boolean;
+}
+
+export interface DailyGoal {
+  date: string;
+  studyTimeTarget: number; // in minutes
+  actualStudyTime: number;
+  completedTasks: number;
+  totalTasks: number;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  color: string;
+  totalStudyTime: number;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  earnedDate?: string;
+}

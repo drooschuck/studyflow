@@ -1,0 +1,13 @@
+import React from 'react';
+import { format } from 'date-fns';
+
+export function Greeting() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Hello, Student!</h1>
+      <p className="mt-1 text-sm text-gray-500">
+        Here's your plan for today, {format(new Date(), 'EEEE, MMMM d')}.
+      </p>
+    </div>
+  );
+}

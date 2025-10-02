@@ -1,0 +1,39 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+
+interface WeeklyGoalProps {
+  actualStudyTime: number;
+  studyTimeTarget: number;
+}
+
+export function WeeklyGoal({ actualStudyTime, studyTimeTarget }: WeeklyGoalProps) {
+  const progressPercentage = Math.min((actualStudyTime / studyTimeTarget) * 100, 100);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="bg-white rounded-lg shadow p-6"
+    >
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Weekly Study Goal</h2>
+      <div className="flex justify-between text-sm text-gray-600 mb-2">
+        <span>Progress</span>
+        <span className="font-medium text-gray-800">
+          {Math.round(actualStudyTime / 60)} / {Math.round(studyTimeTarget / 60)} hours
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <motion.div
+          className="bg-blue-600 h-2.5 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progressPercentage}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        />
+      </div>
+      <p className="text-xs text-gray-500 mt-2 text-center">
+        You're {Math.round(progressPercentage)}% of the way to your weekly goal. Keep it up!
+      </p>
+    </motion.div>
+  );
+}

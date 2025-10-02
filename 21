@@ -1,0 +1,427 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format, addDays, subDays } from 'date-fns';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus,
+  Clock,
+  GripVertical,
+  Edit2,
+  Trash2
+} from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { Activity } from '../types';
+
+const timeSlots = Array.from({ length: 24 }, (_, i) => 
+  `${i.toString().padStart(2, '0')}:00`
+);
+
+const activityTypes = [
+  { type: 'study', label: 'Study', color: '#EF4444' },
+  { type: 'break', label: 'Break', color: '#8B5CF6' },
+  { type: 'school', label: 'School', color: '#3B82F6' },
+  { type: 'meal', label: 'Meal', color: '#F59E0B' },
+  { type: 'personal', label: 'Personal', color: '#10B981' },
+  { type: 'sleep', label: 'Sleep', color: '#6B7280' }
+] as const;
+
+export default function Schedule() {
+  const { state, dispatch } = useApp();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  const [draggedActivity, setDraggedActivity] = useState<Activity | null>(null);
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'study' as Activity['type'],
+    startTime: '',
+    endTime: '',
+    description: ''
+  });
+
+  const dateString = format(selectedDate, 'yyyy-MM-dd');
+  const dayActivities = state.activities
+    .filter(activity => activity.date === dateString)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const handleCreateActivity = (timeSlot?: string) => {
+    const startTime = timeSlot || selectedTimeSlot;
+    const endHour = parseInt(startTime.split(':')[0]) + 1;
+    const endTime = `${endHour.toString().padStart(2, '0')}:00`;
+    
+    setFormData({
+      title: '',
+      type: 'study',
+      startTime,
+      endTime,
+      description: ''
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newActivity: Activity = {
+      id: `${Date.now()}-${Math.random()}`,
+      title: formData.title,
+      type: formData.type,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      date: dateString,
+      status: 'scheduled',
+      color: activityTypes.find(t => t.type === formData.type)?.color
+    };
+
+    dispatch({ type: 'ADD_ACTIVITY', payload: newActivity });
+    setShowCreateForm(false);
+    setFormData({
+      title: '',
+      type: 'study',
+      startTime: '',
+      endTime: '',
+      description: ''
+    });
+  };
+
+  const handleDeleteActivity = (activityId: string) => {
+    dispatch({ type: 'DELETE_ACTIVITY', payload: activityId });
+  };
+
+  const handleDragStart = (activity: Activity) => {
+    setDraggedActivity(activity);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, timeSlot: string) => {
+    e.preventDefault();
+    
+    if (draggedActivity) {
+      const startHour = parseInt(timeSlot.split(':')[0]);
+      const endHour = startHour + 1;
+      const newEndTime = `${endHour.toString().padStart(2, '0')}:00`;
+      
+      const updatedActivity: Activity = {
+        ...draggedActivity,
+        startTime: timeSlot,
+        endTime: newEndTime
+      };
+      
+      dispatch({ type: 'UPDATE_ACTIVITY', payload: updatedActivity });
+      setDraggedActivity(null);
+    }
+  };
+
+  const getActivityForTimeSlot = (timeSlot: string) => {
+    return dayActivities.find(activity => 
+      activity.startTime <= timeSlot && activity.endTime > timeSlot
+    );
+  };
+
+  const calculateActivityHeight = (activity: Activity) => {
+    const start = parseInt(activity.startTime.split(':')[0]);
+    const end = parseInt(activity.endTime.split(':')[0]);
+    return (end - start) * 80; // 80px per hour
+  };
+
+  const calculateActivityTop = (activity: Activity) => {
+    const hour = parseInt(activity.startTime.split(':')[0]);
+    return hour * 80;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Daily Schedule</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Organize your daily activities with drag-and-drop functionality
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+          <div className="flex items-center space-x-2 bg-white rounded-lg shadow px-4 py-2">
+            <button
+              onClick={() => setSelectedDate(subDays(selectedDate, 1))}
+              className="p-1 hover:bg-gray-100 rounded"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="font-medium text-gray-900 min-w-[120px] text-center">
+              {format(selectedDate, 'MMM d, yyyy')}
+            </span>
+            <button
+              onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+              className="p-1 hover:bg-gray-100 rounded"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Activity
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Add Activity Types */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Add Activities</h3>
+        <div className="flex flex-wrap gap-2">
+          {activityTypes.map(({ type, label, color }) => (
+            <button
+              key={type}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, type }));
+                setShowCreateForm(true);
+              }}
+              className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: color }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Create Activity Form */}
+      <AnimatePresence>
+        {showCreateForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-white rounded-lg shadow-lg p-6"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Create New Activity
+            </h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Activity Title
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Mathematics Study Session"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Activity Type
+                  </label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as Activity['type'] })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {activityTypes.map(({ type, label }) => (
+                      <option key={type} value={type}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Create Activity
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Schedule Grid */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {format(selectedDate, 'EEEE, MMMM d')}
+          </h2>
+        </div>
+        
+        <div className="relative">
+          {/* Time Labels */}
+          <div className="absolute left-0 top-0 w-20 bg-gray-50 border-r border-gray-200">
+            {timeSlots.map((time, index) => (
+              <div
+                key={time}
+                className="h-20 flex items-start justify-center pt-2 text-xs text-gray-500 border-b border-gray-100"
+              >
+                {time}
+              </div>
+            ))}
+          </div>
+
+          {/* Schedule Content */}
+          <div className="ml-20 relative" style={{ height: `${timeSlots.length * 80}px` }}>
+            {/* Time Slot Grid */}
+            {timeSlots.map((time, index) => (
+              <div
+                key={time}
+                className="absolute left-0 right-0 h-20 border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer group"
+                style={{ top: `${index * 80}px` }}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, time)}
+                onClick={() => handleCreateActivity(time)}
+              >
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button className="p-2 bg-blue-600 text-white rounded-full shadow-lg">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Activities */}
+            {dayActivities.map((activity) => (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                draggable
+                onDragStart={() => handleDragStart(activity)}
+                className="absolute left-2 right-2 rounded-lg p-3 shadow-sm border-l-4 cursor-move hover:shadow-md transition-shadow"
+                style={{
+                  top: `${calculateActivityTop(activity)}px`,
+                  height: `${calculateActivityHeight(activity)}px`,
+                  backgroundColor: `${activity.color}20`,
+                  borderLeftColor: activity.color
+                }}
+              >
+                <div className="flex items-start justify-between h-full">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center mb-1">
+                      <GripVertical className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {activity.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {activity.startTime} - {activity.endTime}
+                    </p>
+                    <span
+                      className="inline-block px-2 py-1 rounded-full text-xs font-medium text-white mt-2"
+                      style={{ backgroundColor: activity.color }}
+                    >
+                      {activityTypes.find(t => t.type === activity.type)?.label}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1 ml-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Edit functionality
+                      }}
+                      className="p-1 text-gray-500 hover:text-blue-600 hover:bg-white rounded"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteActivity(activity.id);
+                      }}
+                      className="p-1 text-gray-500 hover:text-red-600 hover:bg-white rounded"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Activity Summary */}
+      {dayActivities.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Day Summary</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {activityTypes.map(({ type, label, color }) => {
+              const typeActivities = dayActivities.filter(a => a.type === type);
+              const totalMinutes = typeActivities.reduce((total, activity) => {
+                const start = new Date(`2000-01-01T${activity.startTime}`);
+                const end = new Date(`2000-01-01T${activity.endTime}`);
+                return total + (end.getTime() - start.getTime()) / (1000 * 60);
+              }, 0);
+              
+              if (totalMinutes === 0) return null;
+              
+              return (
+                <div key={type} className="text-center">
+                  <div
+                    className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
+                    style={{ backgroundColor: `${color}20` }}
+                  >
+                    <Clock className="h-5 w-5" style={{ color }} />
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">{label}</p>
+                  <p className="text-xs text-gray-600">
+                    {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
