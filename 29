@@ -1,0 +1,97 @@
+# StudyFlow - Student Daily Time Organizer
+
+StudyFlow is a modern, feature-rich web application designed to help students organize their daily schedules, manage study plans, and track their academic progress. Built with a focus on user experience and productivity, it provides a comprehensive suite of tools to help students stay on top of their goals.
+
+![StudyFlow App Preview](https://i.ibb.co/67X3xfSV/studyflow-preview.png)
+
+## 🎯 Aim of the Project
+
+The primary goal of StudyFlow is to provide students with a single, intuitive platform to manage their academic life. By combining schedule management, study planning, and progress tracking, the app aims to:
+-   Enhance productivity and time management skills.
+-   Provide a clear overview of daily, weekly, and long-term commitments.
+-   Motivate students through goal setting and achievement tracking.
+-   Reduce the cognitive load of planning, allowing students to focus more on learning.
+
+## ✨ Key Features
+
+-   **Dashboard:** A central hub showing today's schedule, quick stats, weekly goals, and upcoming tasks.
+-   **Study Plan Management:** Create, edit, and delete detailed study sessions with subjects, priorities, and learning objectives.
+-   **Daily Schedule Builder:** An interactive, drag-and-drop calendar interface to visually organize daily activities.
+-   **Routine Templates:** Create and apply reusable templates (e.g., "Weekday," "Weekend") to quickly populate a day's schedule.
+-   **Progress Tracking:** Visualize study habits with weekly charts, subject-wise statistics, and an achievement system to celebrate milestones.
+-   **Responsive Design:** A beautiful and functional interface that works seamlessly on desktop, tablet, and mobile devices.
+
+## 🛠️ Tech Stack
+
+This project is built with a modern, robust, and scalable frontend stack:
+
+-   **Framework:** [React 19](https://react.dev/)
+-   **Language:** [TypeScript](https://www.typescriptlang.org/)
+-   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+-   **Routing:** [React Router v6](https://reactrouter.com/)
+-   **State Management:** React Context API
+-   **Animations:** [Framer Motion](https://www.framer.com/motion/)
+-   **Icons:** [Lucide React](https://lucide.dev/)
+-   **Date & Time:** [date-fns](https://date-fns.org/)
+-   **Build Tool:** [Vite](https://vitejs.dev/)
+-   **Package Manager:** [Yarn](https://yarnpkg.com/)
+
+## 🚀 Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+-   [Node.js](https://nodejs.org/) (version 18.x or higher)
+-   [Yarn](https://yarnpkg.com/getting-started/install)
+
+### Installation & Setup
+
+1.  **Clone the repository** (or download the source code):
+    ```sh
+    git clone https://github.com/your-username/studyflow.git
+    ```
+
+2.  **Navigate to the project directory:**
+    ```sh
+    cd studyflow
+    ```
+
+3.  **Install dependencies:**
+    ```sh
+    yarn install
+    ```
+
+4.  **Run the development server:**
+    ```sh
+    yarn run dev
+    ```
+
+5.  Open [http://localhost:5173](http://localhost:5173) (or the URL provided in your terminal) to view the application in your browser.
+
+## 📂 Project Structure
+
+The `src` directory is organized to maintain a clean and scalable codebase:
+
+```
+/src
+├── /components   # Reusable UI components (e.g., Layout, Cards, Modals)
+│   └── /dashboard  # Components specific to the Dashboard page
+├── /context      # Global state management (AppContext)
+├── /pages        # Top-level page components for each route
+├── /types        # TypeScript type definitions and interfaces
+├── App.tsx       # Main application component with routing setup
+├── main.tsx      # Entry point of the React application
+└── index.css     # Tailwind CSS directives and global styles
+```
+
+## 🔮 Future Enhancements
+
+-   **Backend Integration:** Connect to a backend service like [Supabase](https://supabase.com/) to persist user data, enable authentication, and sync across devices.
+-   **Notifications:** Implement push notifications to remind users of upcoming activities.
+-   **Advanced Analytics:** Provide more in-depth charts and insights into study patterns over time.
+-   **Data Import/Export:** Allow users to import/export their schedule data.
+
+---
+
+Built by Dualite Alpha.
